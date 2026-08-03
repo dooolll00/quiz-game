@@ -27,3 +27,17 @@ cd quiz-game
 
 # 3. 프로그램 실행
 python3 main.py
+
+quiz-game/
+├── main.py        # 퀴즈 게임 전체 동작 코드 및 클래스 정의
+├── state.json     # 퀴즈 데이터 및 최고 점수 저장 파일 (자동 생성)
+├── .gitignore     # Git 추적 제외 설정
+└── README.md      # 프로젝트 사양서 및 설명서
+
+## 📸 미션 수행 및 실행 스크린샷
+
+### 1. Git 커밋 이력 그래프 (`git log`)
+![Git Log Graph](<img width="546" height="191" alt="Image" src="https://github.com/user-attachments/assets/79507655-593f-4b2a-890f-c2a90b3e50c5" />)
+
+### 2. 프로그램 실행 및 결과 화면
+![Game Play](<img width="882" height="1099" alt="Image" src="https://github.com/user-attachments/assets/adebe353-f79c-4898-a29b-5c6ba4a743d6" />)
