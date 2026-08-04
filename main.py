@@ -17,7 +17,7 @@ class Quiz:
         """Print this quiz question and its choices."""
         print("-" * 40)
         print(f"[문제 {number}] {self.question}")
-    for index, choice in enumerate(self.choices, start=1):
+        for index, choice in enumerate(self.choices, start=1):
             print(f"  {index}. {choice}")
 
     def check_answer(self, user_answer: int) -> bool:
@@ -45,7 +45,9 @@ class Quiz:
 class QuizGame:
     """Manage menus, quiz play, score tracking, and state persistence."""
 
-    STATE_FILE = "state.json"
+     STATE_FILE = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "state.json"
+    )
 
     def __init__(self, state_file: str = STATE_FILE):
         self.state_file = state_file
@@ -273,7 +275,6 @@ class QuizGame:
                 self.save_state()
                 break
 
-        sys.exit(0)
 
 
 def main() -> None:
