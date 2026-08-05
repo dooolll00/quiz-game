@@ -1,0 +1,60 @@
+{
+  "quizzes": [
+    {
+      "id": 1,
+      "question": "파이썬에서 리스트의 맨 끝에 값을 추가할 때 사용하는 메서드는 무엇일까요?",
+      "options": [
+        "append()",
+        "push()",
+        "add()",
+        "insert_last()"
+      ],
+      "correct_answer": 1
+    },
+    {
+      "id": 2,
+      "question": "파이썬에서 주석 한 줄을 작성할 때 사용하는 기호는 무엇일까요?",
+      "options": [
+        "//",
+        "<!-- -->",
+        "#",
+        "/* */"
+      ],
+      "correct_answer": 3
+    },
+    {
+      "id": 3,
+      "question": "딕셔너리에서 키와 값을 함께 반복할 때 주로 사용하는 메서드는 무엇일까요?",
+      "options": [
+        "keys()",
+        "values()",
+        "items()",
+        "pairs()"
+      ],
+      "correct_answer": 3
+    },
+    {
+      "id": 4,
+      "question": "파이썬에서 예외 처리를 시작할 때 사용하는 키워드는 무엇일까요?",
+      "options": [
+        "catch",
+        "try",
+        "except",
+        "error"
+      ],
+      "correct_answer": 2
+    },
+    {
+      "id": 5,
+      "question": "함수에서 값을 돌려줄 때 사용하는 키워드는 무엇일까요?",
+      "options": [
+        "return",
+        "yield",
+        "print",
+        "break"
+      ],
+      "correct_answer": 1
+    }
+  ],
+  "best_score": null
+}
