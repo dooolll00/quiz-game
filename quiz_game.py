@@ -1,94 +1,204 @@
-"""QuizGame class for managing quiz state and game logic."""
+"""게임 전체를 관리하는 QuizGame 클래스."""
 
 import json
 import os
-from quiz import Quiz
+import random
+
+from quiz import Quiz, default_quizzes
+
+STATE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "state.json")
 
 
 class QuizGame:
-    """Manages quiz game state, including quizzes and best score."""
+    """메뉴를 보여주고 사용자가 선택한 기능을 실행하는 게임 관리 클래스."""
 
-    def __init__(self, state_file="state.json"):
+    def __init__(self, state_file: str = STATE_FILE):
         self.state_file = state_file
-        self.quizzes = []
-        self.best_score = 0
-        self.load_state()
+        self.quizzes = default_quizzes()
+        self.best_score = None  # 아직 퀴즈를 풀지 않았으면 None
 
-    def load_state(self):
-        if not os.path.exists(self.state_file):
-            self._create_default_quizzes()
-        else:
+    def show_menu(self) -> None:
+        """사용자가 선택할 수 있는 메인 메뉴를 출력한다."""
+        print()
+        print("=" * 40)
+        print("          🎯 나만의 퀴즈 게임 🎯")
+        print("=" * 40)
+        print("        1. 퀴즈 풀기")
+        print("        2. 퀴즈 추가")
+        print("        3. 퀴즈 목록")
+        print("        4. 점수 확인")
+        print("        5. 종료")
+        print("=" * 40)
+
+    def read_int(self, prompt: str, min_value: int, max_value: int) -> int | None:
+        """숫자 입력 공통 처리: 공백 제거, 빈 입력/숫자 아님/범위 밖이면 재입력."""
+        while True:
             try:
-                with open(self.state_file, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    self.best_score = data.get("best_score", 0)
-                    self.quizzes = [Quiz.from_dict(q) for q in data.get("quizzes", [])]
-            except (json.JSONDecodeError, IOError) as e:
-                print(f"Error loading state: {e}")
-                self._create_default_quizzes()
+                raw = input(prompt).strip()
+            except (KeyboardInterrupt, EOFError):
+                print("\n\n⚠️ 입력이 중단되었습니다. 현재 데이터를 저장하고 안전하게 종료합니다.")
+                self.save_state()
+                return None
 
-    def save_state(self):
-        try:
-            data = {
-                "best_score": self.best_score,
-                "quizzes": [q.to_dict() for q in self.quizzes],
-            }
-            with open(self.state_file, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2, ensure_ascii=False)
-        except IOError as e:
-            print(f"Error saving state: {e}")
+            if raw == "":
+                print(f"⚠️ 아무것도 입력되지 않았습니다. {min_value}-{max_value} 사이의 숫자를 입력하세요.")
+                continue
+            try:
+                value = int(raw)
+            except ValueError:
+                print(f"⚠️ 잘못된 입력입니다. {min_value}-{max_value} 사이의 숫자를 입력하세요.")
+                continue
+            if not min_value <= value <= max_value:
+                print(f"⚠️ 잘못된 입력입니다. {min_value}-{max_value} 사이의 숫자를 입력하세요.")
+                continue
+            return value
 
-    def _create_default_quizzes(self):
-        default_quizzes = [
-            {
-                "id": 1,
-                "question": "파이썬(Python)의 창시자는 누구일까요?",
-                "options": ["Guido van Rossum", "Linus Torvalds", "James Gosling", "Bjarne Stroustrup"],
-                "correct_answer": 1,
-            },
-            {
-                "id": 2,
-                "question": "파이썬에서 변경 불가능(Immutable)한 순서형 데이터 타입은?",
-                "options": ["List", "Dictionary", "Tuple", "Set"],
-                "correct_answer": 3,
-            },
-            {
-                "id": 3,
-                "question": "Git에서 현재 작업 영역을 저장소에 기록하는 명령어는?",
-                "options": ["git add", "git commit", "git push", "git checkout"],
-                "correct_answer": 2,
-            },
-            {
-                "id": 4,
-                "question": "JSON 표준 인코딩 방식은 무엇일까요?",
-                "options": ["EUC-KR", "ASCII", "UTF-8", "UTF-16"],
-                "correct_answer": 3,
-            },
-            {
-                "id": 5,
-                "question": "파이썬 클래스 인스턴스 자신을 가리키는 첫 번째 매개변수 이름은?",
-                "options": ["this", "self", "cls", "super"],
-                "correct_answer": 2,
-            },
-        ]
-        self.quizzes = [Quiz.from_dict(q) for q in default_quizzes]
-        self.best_score = 0
-        self.save_state()
+    def read_text(self, prompt: str) -> str | None:
+        """문자 입력 공통 처리: 공백 제거, 빈 입력/깨진 문자면 재입력."""
+        while True:
+            try:
+                raw = input(prompt).strip()
+            except (KeyboardInterrupt, EOFError):
+                print("\n\n⚠️ 입력이 중단되었습니다. 현재 데이터를 저장하고 안전하게 종료합니다.")
+                self.save_state()
+                return None
 
-    def add_quiz(self, question, options, correct_answer):
-        quiz_id = max([q.quiz_id for q in self.quizzes], default=0) + 1
-        quiz = Quiz(quiz_id, question, options, correct_answer)
-        self.quizzes.append(quiz)
-        self.save_state()
-        return quiz_id
+            if not raw:
+                print("⚠️ 빈 입력은 사용할 수 없습니다. 다시 입력하세요.")
+                continue
+            try:
+                raw.encode("utf-8")
+            except UnicodeEncodeError:
+                print("⚠️ 인식할 수 없는 문자가 포함되어 있습니다. 터미널 인코딩(UTF-8)을 확인하고 다시 입력하세요.")
+                continue
+            return raw
 
-    def get_quizzes(self):
-        return self.quizzes
+    def play_quiz(self) -> None:
+        """저장된 퀴즈를 랜덤 순서로 출제하고 채점한 뒤 결과를 표시한다."""
+        if not self.quizzes:
+            print("⚠️ 등록된 퀴즈가 없습니다. 먼저 퀴즈를 추가하세요.")
+            return
 
-    def update_best_score(self, score):
-        if score > self.best_score:
+        total = len(self.quizzes)
+        correct = 0
+        shuffled = random.sample(self.quizzes, total)
+        print(f"\n📝 퀴즈를 시작합니다! (총 {total}문제)")
+        print("-" * 40)
+        for number, quiz in enumerate(shuffled, start=1):
+            quiz.display(number)
+            user_answer = self.read_int("    정답 입력: ", 1, 4)
+            if user_answer is None:
+                return
+            if quiz.check(user_answer):
+                correct += 1
+                print("✅ 정답입니다!")
+            else:
+                print(f"❌ 오답입니다! (정답: {quiz.answer}. {quiz.choices[quiz.answer - 1]})")
+            print("-" * 40)
+
+        score = round(correct / total * 100)
+        print("=" * 40)
+        print(f"🏆 결과: {total}문제 중 {correct}문제 정답! ({score}점)")
+        if self.best_score is None or score > self.best_score:
             self.best_score = score
+            print("🎉 새로운 최고 점수입니다!")
+        self.save_state()
+        print("=" * 40)
+
+    def show_score(self) -> None:
+        """최고 점수를 출력한다. 아직 퀴즈를 풀지 않았으면 안내한다."""
+        if self.best_score is None:
+            print("⚠️ 아직 퀴즈를 푼 기록이 없습니다. 먼저 퀴즈를 풀어보세요!")
+            return
+        print(f"\n🏆 최고 점수: {self.best_score}점")
+
+    def add_quiz(self) -> None:
+        """문제/선택지 4개/정답 번호를 입력받아 새 퀴즈를 등록하고 저장한다."""
+        print("\n📌 새로운 퀴즈를 추가합니다.")
+        question = self.read_text("문제를 입력하세요: ")
+        if question is None:
+            return
+        choices = []
+        for i in range(1, 5):
+            choice = self.read_text(f"선택지 {i}: ")
+            if choice is None:
+                return
+            choices.append(choice)
+        answer = self.read_int("정답 번호 (1-4): ", 1, 4)
+        if answer is None:
+            return
+
+        quiz_id = max((quiz.quiz_id for quiz in self.quizzes), default=0) + 1
+        self.quizzes.append(Quiz(quiz_id, question, choices, answer))
+        self.save_state()
+        print("\n✅ 퀴즈가 추가되었습니다!")
+
+    def list_quizzes(self) -> None:
+        """등록된 퀴즈 목록을 번호와 함께 출력한다."""
+        if not self.quizzes:
+            print("⚠️ 등록된 퀴즈가 없습니다.")
+            return
+
+        print(f"\n📋 등록된 퀴즈 목록 (총 {len(self.quizzes)}개)")
+        print("-" * 40)
+        for number, quiz in enumerate(self.quizzes, start=1):
+            print(f"[{number}] {quiz.question}")
+        print("-" * 40)
+
+    def save_state(self) -> None:
+        """퀴즈 목록과 최고 점수를 state.json에 UTF-8로 저장한다."""
+        data = {
+            "quizzes": [quiz.to_dict() for quiz in self.quizzes],
+            "best_score": self.best_score,
+        }
+        temp_file = self.state_file + ".tmp"
+        try:
+            with open(temp_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            os.replace(temp_file, self.state_file)
+        except (OSError, ValueError) as e:
+            print(f"⚠️ 데이터 저장에 실패했습니다: {e}")
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+
+    def load_state(self) -> None:
+        """state.json에서 데이터를 불러온다. 없거나 손상되면 기본 퀴즈를 사용한다."""
+        try:
+            with open(self.state_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            self.quizzes = [Quiz.from_dict(q) for q in data["quizzes"]]
+            self.best_score = data.get("best_score")
+            best = f"{self.best_score}점" if self.best_score is not None else "없음"
+            print(f"📂 저장된 데이터를 불러왔습니다. (퀴즈 {len(self.quizzes)}개, 최고점수 {best})")
+        except FileNotFoundError:
+            print("📂 저장된 데이터가 없어 기본 퀴즈로 시작합니다.")
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError, OSError):
+            self.quizzes = default_quizzes()
+            self.best_score = None
+            print("⚠️ 데이터 파일이 손상되어 기본 퀴즈로 초기화합니다.")
             self.save_state()
 
-    def get_best_score(self):
-        return self.best_score
+    def run(self) -> None:
+        """메인 루프: 메뉴 출력 → 번호 선택 → 기능 실행."""
+        self.load_state()
+        while True:
+            self.show_menu()
+            choice = self.read_int("    선택: ", 1, 5)
+            if choice is None:
+                break
+            if choice == 1:
+                self.play_quiz()
+            elif choice == 2:
+                self.add_quiz()
+            elif choice == 3:
+                self.list_quizzes()
+            elif choice == 4:
+                self.show_score()
+            else:
+                self.save_state()
+                print("👋 게임을 종료합니다.")
+                break
+
+
+if __name__ == "__main__":
+    QuizGame().run()
