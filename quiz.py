@@ -1,92 +1,84 @@
-"""Quiz model and default quiz data."""
+"""퀴즈 한 개를 표현하는 Quiz 클래스."""
 
 
 class Quiz:
-    """Represents a single four-choice quiz question."""
+    """문제, 선택지 4개, 정답 번호(1~4)를 가지는 퀴즈 한 개."""
 
-    def __init__(self, quiz_id: int, question: str, options: list[str], correct_answer: int):
+    def __init__(self, question, choices, answer, quiz_id=None):
         self.quiz_id = quiz_id
         self.question = question
-        self.options = options
-        self.correct_answer = correct_answer
+        self.choices = choices
+        self.answer = answer  # 1~4 사이의 정답 번호
 
     @property
-    def choices(self) -> list[str]:
-        """Compatibility alias for code that uses the name choices."""
-        return self.options
+    def options(self):
+        """기존 options 이름을 쓰는 코드와 호환하기 위한 별칭."""
+        return self.choices
 
     @property
-    def answer(self) -> int:
-        """Compatibility alias for code that uses the name answer."""
-        return self.correct_answer
+    def correct_answer(self):
+        """기존 correct_answer 이름을 쓰는 코드와 호환하기 위한 별칭."""
+        return self.answer
 
-    def display(self, number: int) -> None:
-        """Print this quiz question and its choices."""
-        print("-" * 40)
+    def display(self, number):
+        """문제와 선택지를 화면에 출력한다."""
         print(f"[문제 {number}] {self.question}")
-        for i, option in enumerate(self.options, start=1):
-            print(f"  {i}. {option}")
+        for i, choice in enumerate(self.choices, start=1):
+            print(f"    {i}. {choice}")
 
-    def check_answer(self, user_answer: int) -> bool:
-        """Return True when the selected answer number is correct."""
-        return self.correct_answer == user_answer
+    def check(self, user_answer):
+        """사용자가 입력한 번호가 정답인지 확인한다."""
+        return user_answer == self.answer
 
-    def check(self, user_answer: int) -> bool:
-        """Compatibility alias for check_answer."""
-        return self.check_answer(user_answer)
+    def check_answer(self, user_answer):
+        """기존 check_answer 이름을 쓰는 코드와 호환하기 위한 별칭."""
+        return self.check(user_answer)
 
-    def to_dict(self) -> dict:
-        """Convert this quiz to the JSON-serializable state schema."""
+    def to_dict(self):
+        """JSON 저장을 위해 딕셔너리로 변환한다."""
         return {
-            "id": self.quiz_id,
             "question": self.question,
-            "options": self.options,
-            "correct_answer": self.correct_answer,
+            "choices": self.choices,
+            "answer": self.answer,
         }
 
     @classmethod
-    def from_dict(cls, data: dict):
-        """Create a Quiz from current or legacy state data."""
+    def from_dict(cls, data):
+        """JSON에서 읽은 딕셔너리로 Quiz 인스턴스를 만든다."""
         return cls(
-            quiz_id=data.get("id", 1),
-            question=data.get("question", ""),
-            options=data.get("options", data.get("choices", [])),
-            correct_answer=data.get("correct_answer", data.get("answer", 1)),
+            question=str(data["question"]),
+            choices=[str(c) for c in data.get("choices", data.get("options", []))],
+            answer=int(data.get("answer", data.get("correct_answer", 1))),
+            quiz_id=data.get("id"),
         )
 
 
-def default_quizzes() -> list[Quiz]:
-    """Return fresh default quizzes with a Python programming theme."""
-    quiz_data = [
-        {
-            "id": 1,
-            "question": "파이썬에서 리스트의 맨 끝에 값을 추가할 때 사용하는 메서드는 무엇일까요?",
-            "options": ["append()", "push()", "add()", "insert_last()"],
-            "correct_answer": 1,
-        },
-        {
-            "id": 2,
-            "question": "파이썬에서 주석 한 줄을 작성할 때 사용하는 기호는 무엇일까요?",
-            "options": ["//", "<!-- -->", "#", "/* */"],
-            "correct_answer": 3,
-        },
-        {
-            "id": 3,
-            "question": "딕셔너리에서 키와 값을 함께 반복할 때 주로 사용하는 메서드는 무엇일까요?",
-            "options": ["keys()", "values()", "items()", "pairs()"],
-            "correct_answer": 3,
-        },
-        {
-            "id": 4,
-            "question": "파이썬에서 예외 처리를 시작할 때 사용하는 키워드는 무엇일까요?",
-            "options": ["catch", "try", "except", "error"],
-            "correct_answer": 2,
-        },
-        {
-            "id": 5,
-            "question": "함수에서 값을 돌려줄 때 사용하는 키워드는 무엇일까요?",
-            "options": ["return", "yield", "print", "break"],
-            "correct_answer": 1,
-        },
+def default_quizzes():
+    """저장 파일이 없을 때 사용하는 기본 파이썬 퀴즈 5개."""
+    return [
+        Quiz(
+            "파이썬에서 리스트의 맨 끝에 값을 추가할 때 사용하는 메서드는?",
+            ["append()", "push()", "add()", "insert_last()"],
+            1,
+        ),
+        Quiz(
+            "파이썬에서 한 줄 주석을 작성할 때 사용하는 기호는?",
+            ["//", "<!-- -->", "#", "/* */"],
+            3,
+        ),
+        Quiz(
+            "딕셔너리에서 키와 값을 함께 반복할 때 사용하는 메서드는?",
+            ["keys()", "values()", "items()", "pairs()"],
+            3,
+        ),
+        Quiz(
+            "파이썬에서 예외 처리를 시작할 때 사용하는 키워드는?",
+            ["catch", "try", "except", "error"],
+            2,
+        ),
+        Quiz(
+            "함수에서 값을 돌려줄 때 사용하는 키워드는?",
+            ["return", "yield", "print", "break"],
+            1,
+        ),
     ]
-    return [Quiz.from_dict(item) for item in quiz_data]
