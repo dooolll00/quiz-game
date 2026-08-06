@@ -37,11 +37,11 @@ class Quiz:
     def to_dict(self):
         """JSON 저장을 위해 딕셔너리로 변환한다."""
         return {
+            "id": self.quiz_id,
             "question": self.question,
             "choices": self.choices,
             "answer": self.answer,
         }
-
     @classmethod
     def from_dict(cls, data):
         """JSON에서 읽은 딕셔너리로 Quiz 인스턴스를 만든다."""
