@@ -128,7 +128,11 @@ class QuizGame:
         if answer is None:
             return
 
-        quiz_id = max((quiz.quiz_id for quiz in self.quizzes), default=0) + 1
+        quiz_id = max(
+            (quiz.quiz_id for quiz in self.quizzes if quiz.quiz_id is not None),
+            default=0,
+        ) + 1
+
         self.quizzes.append(Quiz(question, choices, answer, quiz_id=quiz_id))
         self.save_state()
         print("\n✅ 퀴즈가 추가되었습니다!")
