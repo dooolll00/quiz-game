@@ -129,7 +129,7 @@ class QuizGame:
             return
 
         quiz_id = max((quiz.quiz_id for quiz in self.quizzes), default=0) + 1
-        self.quizzes.append(Quiz(quiz_id, question, choices, answer))
+        self.quizzes.append(Quiz(question, choices, answer, quiz_id=quiz_id))
         self.save_state()
         print("\n✅ 퀴즈가 추가되었습니다!")
 
